@@ -1,0 +1,21 @@
+name: peaclock
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - biopython=1.74
+  - coreutils=8.25
+  - mafft
+  - minimap2=2.17
+  - pip=19.3.1
+  - python=3.6
+  - snakemake-minimal
+  - pip:
+    - msgpack==0.6.2
+    - binlorry==1.3.0a1
+    - git+https://github.com/artic-network/Porechop.git@v3.1pre1
+    - pytools
+    - scipy==1.3.1
+    - parasail
+    - matplotlib==3.1.1
