@@ -8,11 +8,7 @@ from peaclock import __version__, _program
 setup(name='peaclock',
       version=__version__,
       packages=find_packages(),
-      scripts=["peaclock/scripts/Snakefile",
-      "peaclock/scripts/parse_paf.py",
-      "peaclock/scripts/process_local_trees.smk",
-      "peaclock/scripts/make_report.py",
-      "peaclock/scripts/report_template.pmd"],
+      scripts=["peaclock/scripts/Snakefile"],
       package_data={"peaclock":["data/*"]},
       install_requires=[
             "biopython>=1.70",
