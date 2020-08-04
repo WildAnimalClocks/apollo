@@ -32,7 +32,7 @@ def main(sysargs = sys.argv[1:]):
 
     parser.add_argument('-s',"--species", action="store",help="Indicate which species is being sequenced", dest="species")
 
-    parser.add_argument("-r","--report",action="store_true",help="Generate markdown report of input queries and their local trees")
+    # parser.add_argument("-r","--report",action="store_true",help="Generate markdown report of input queries and their local trees")
 
     parser.add_argument('-o','--outdir', action="store",help="Output directory. Default: current working directory")
     parser.add_argument('--tempdir',action="store",help="Specify where you want the temp stuff to go. Default: $TMPDIR")
@@ -109,6 +109,9 @@ def main(sysargs = sys.argv[1:]):
             reference_fasta = pkg_resources.resource_filename('peaclock', reference_file)
             primers = pkg_resources.resource_filename('peaclock', primers_file)
 
+            if not os.path.isfile(cpg_sites) or not os.path.isfile(reference_fasta) or not os.path.isfile(primers):
+                sys.stderr.write(f'Error: cannot find data files for {species}\n Check installation')
+                sys.exit(-1)
         else:
             sys.stderr.write("""
 Error: please indicate a valid species name.\n
@@ -172,27 +175,15 @@ Use one of the following:
         "force":"True"
         }
 
-    # get species data
-    
-
-    if args.distance:
-        try:
-            distance = int(args.distance) 
-            config["distance"] = args.distance
-        except:
-            sys.stderr.write('Error: distance must be an integer\n')
-            sys.exit(-1)
-    else:
-        config["distance"] = "1"
 
     if args.report:
         config["report"] = True
     else:
         config["report"] = False
     
-    config["report_template"] =  os.path.join(thisdir, 'scripts','report_template.pmd')
-    footer_fig = pkg_resources.resource_filename('peaclock', 'data/footer.png')
-    config["footer"] = footer_fig
+    # config["report_template"] =  os.path.join(thisdir, 'scripts','report_template.pmd')
+    # footer_fig = pkg_resources.resource_filename('peaclock', 'data/footer.png')
+    # config["footer"] = footer_fig
     
     if args.threshold:
         try:
