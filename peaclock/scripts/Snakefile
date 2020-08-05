@@ -1,0 +1,59 @@
+import os
+import collections
+from Bio import SeqIO
+
+##### Configuration #####
+
+run_name = config["run_name"]
+
+if config["barcode_set"]=="native":
+    barcode_set= " --native_barcodes"
+elif config["barcode_set"]=="rapid":
+    barcode_set= " --rapid_barcodes"
+elif config["barcode_set"]=="pcr":
+    barcode_set=" --pcr_barcodes"
+elif config["barcode_set"]=="all":
+    barcode_set=""
+
+if barcodes != "":
+    barcodes = config["barcodes"].split(',')
+    barcode_string = ""
+    for i in barcodes:
+        barcode_string+=" {}".format(i.lstrip("NB").lstrip("BC").lstrip("barcode"))
+    limit_barcodes_to = f" --limit_barcodes_to {barcode_string}"
+
+# # todo - check that the value is true or false
+# require_two_barcodes = ""
+# if str(config["require_two_barcodes"]).lower()=="false":
+#     require_two_barcodes= ""
+# else:
+#     require_two_barcodes= " --require_two_barcodes"
+
+# # todo - check that the value is true or false
+# split_reads = ""
+# if str(config["split_reads"]).lower()=="true":
+#     split_reads= " --no_split"
+# else:
+#     split_reads= " --no_split"
+
+# todo - check that the value is true or false
+discard_middle = ""
+if str(config["discard_middle"]).lower()=="true":
+    discard_middle= " --discard_middle"
+else:
+    discard_middle= ""
+
+##### Target rules #####
+
+rule all:
+    input:
+        os.path.join(config["output_path"],f"{run_name}.fastq"),
+        expand(os.path.join(config["output_path"],"demultiplexed_reads","{barcode}.fastq"), barcode=config["barcodes"]),
+        os.path.join(config["output_path"], "reports","cpg_counts.csv"),
+        os.path.join(config["output_path"], "reports","cpg_wide.csv")
+
+##### Modules #####
+include: "count_cpgs.smk"
+
+
+

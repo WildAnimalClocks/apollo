@@ -8,7 +8,9 @@ from peaclock import __version__, _program
 setup(name='peaclock',
       version=__version__,
       packages=find_packages(),
-      scripts=["peaclock/scripts/Snakefile"],
+      scripts=["peaclock/scripts/Snakefile",
+            "peaclock/scripts/paramether.py",
+            "peaclock/scripts/count_cpgs.smk"],
       package_data={"peaclock":["data/*"]},
       install_requires=[
             "biopython>=1.70",
