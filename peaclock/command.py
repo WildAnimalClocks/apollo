@@ -29,6 +29,7 @@ def main(sysargs = sys.argv[1:]):
 
     parser.add_argument('-i','--read-dir',help="Input the path to the reads",dest="read_dir")
     parser.add_argument('-b','--barcodes-csv',help="CSV file describing which barcodes were used on which sample",dest="barcodes_csv")
+    parser.add_argument('-k','--barcode-kit',help="Indicates which barcode kit was used. Default: native. Options: native, rapid, pcr, all",dest="barcode_kit")
 
     parser.add_argument('-s',"--species", action="store",help="Indicate which species is being sequenced", dest="species")
 
@@ -87,12 +88,23 @@ def main(sysargs = sys.argv[1:]):
             sys.exit(-1)
         else:
             print(f"Input barcodes csv file: {barcodes_csv}")
+            barcodes = []
             with open(barcodes_csv, newline="") as f:
                 reader = csv.DictReader(f)
                 column_names = reader.fieldnames
                 if "barcode" not in column_names:
                     sys.stderr.write(f"Error: Barcode file missing header field `barcode`\n")
                     sys.exit(-1)
+                for row in reader: 
+                    if not row["barcode"].startswith("NB") or not row["barcode"].startswith("BC"):
+                        sys.stderr.write(f"Error: Please provide barcodes in the format `NB01` or `BC01`\n")
+                        sys.exit(-1)
+                    else:
+                        barcodes.append(row["barcode"])
+                print(f"{len(barcodes)} barcodes read in from file")
+                for i in barcodes:
+                    print(f"\t-{i}")
+                barcodes = ",".join(barcodes)
     else:
         barcodes_csv = ""
         print(f"No barcodes csv file input, assuming only one sample.")
@@ -163,6 +175,7 @@ Use one of the following:
         threads = 1
     print(f"Number of threads: {threads}\n")
 
+    matrix_file = pkg_resources.resource_filename('peaclock', "substitution_matrix.txt")
     # create the config dict to pass through to the snakemake file
     config = {
         "outdir":outdir,
@@ -170,6 +183,12 @@ Use one of the following:
         "read_dir":read_dir,
         "rel_outdir":rel_outdir,
         "species":species,
+        "barcodes":barcodes,
+        "barcodes_csv":barcodes_csv,
+        "matrix_file":matrix_file,
+        "cpg_sites":cpg_sites,
+        "reference_fasta":reference_fasta,
+        "primers":primers,
         # "input_column":args.input_column,
         # "data_column":args.data_column,
         "force":"True"
@@ -194,6 +213,15 @@ Use one of the following:
             sys.exit(-1)
     else:
         config["threshold"] = "1"
+    
+    if args.barcode_kit:
+        if args.barcode_kit.lower() in ["native","pcr","rapid","all"]:
+            config["barcode_set"] = args.barcode_kit.lower()
+        else:
+            sys.stderr.write(f"Error: Please enter a valid barcode kit: one of\n\t-native\n\t-pcr\n\t-rapid\n\t-all\n")
+            sys.exit(-1)
+    else:
+        config["barcode_set"] = "native"
 
     # don't run in quiet mode if verbose specified
     if args.verbose:
