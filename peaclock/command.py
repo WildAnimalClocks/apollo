@@ -65,7 +65,7 @@ def main(sysargs = sys.argv[1:]):
     Initialising dicts
     """
 
-    config = cfunk.get_defaults()
+    config = qcfunk.get_defaults()
 
     configfile = qcfunk.look_for_config(args.configfile,cwd,config)
 

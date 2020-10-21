@@ -161,9 +161,9 @@ def get_package_data(thisdir,species_arg, config):
     species = config["species"]
 
     if species in config["allowed_species"]:
-        cpg_sites = pkg_resources.resource_filename('peaclock', f"{spceies}/cpg_sites.csv")
-        genes = pkg_resources.resource_filename('peaclock', f"{spceies}/genes.fasta")
-        primer_sequences = pkg_resources.resource_filename('peaclock', f"{spceies}/primer_sequences.csv")
+        cpg_sites = pkg_resources.resource_filename('peaclock', f"data/{species}/cpg_sites.csv")
+        genes = pkg_resources.resource_filename('peaclock', f"data/{species}/genes.fasta")
+        primer_sequences = pkg_resources.resource_filename('peaclock', f"data/{species}/primer_sequences.csv")
 
         config["cpg_sites"] = cpg_sites
         config["genes"] = genes
@@ -193,7 +193,8 @@ def look_for_guppy_barcoder(demultiplex_arg,path_to_guppy_arg,cwd,config):
 def look_for_basecalled_reads(read_path_arg,cwd,config):
 
     if read_path_arg:
-        read_path = os.path.join(cwd, read_path_arg)
+        expanded_path = os.path.expanduser(read_path_arg)
+        read_path = os.path.join(cwd, expanded_path)
         if not os.path.exists(read_path):
             sys.stderr.write(cyan('Error: cannot find reads at {}\n'.format(read_path)))
             sys.exit(-1)
