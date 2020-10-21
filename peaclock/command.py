@@ -17,6 +17,9 @@ from Bio import SeqIO
 import pkg_resources
 from . import _program
 
+import peaclockfunks as qcfunk
+import custom_logger as custom_logger
+import log_handler_handle as lh
 
 thisdir = os.path.abspath(os.path.dirname(__file__))
 cwd = os.getcwd()
@@ -27,15 +30,19 @@ def main(sysargs = sys.argv[1:]):
     description='peaclock: Predicted Epigenetic Age Clock', 
     usage='''peaclock -i <path/to/reads> -b <path/to/data> [options]''')
 
-    parser.add_argument('-i','--read-dir',help="Input the path to the reads",dest="read_dir")
+    parser.add_argument('-i','--read-path',help="Input the path to the reads",dest="read_path")
+    parser.add_argument('-c',"--configfile",help="Config file with PEAClock run settings",dest="configfile")
     parser.add_argument('-b','--barcodes-csv',help="CSV file describing which barcodes were used on which sample",dest="barcodes_csv")
     parser.add_argument('-k','--barcode-kit',help="Indicates which barcode kit was used. Default: native. Options: native, rapid, pcr, all",dest="barcode_kit")
 
+    parser.add_argument('--demultiplex',action="store_true",help="Indicates that your reads have not been demultiplexed and will run guppy demultiplex on your provided read directory",dest="demultiplex")
+    parser.add_argument('--path-to-guppy',action="store_true",help="Path to guppy_barcoder executable",dest="path_to_guppy")
+
     parser.add_argument('-s',"--species", action="store",help="Indicate which species is being sequenced", dest="species")
+    parser.add_argument("-r","--report",action="store_true",help="Generate markdown report of estimated age")
 
-    # parser.add_argument("-r","--report",action="store_true",help="Generate markdown report of input queries and their local trees")
-
-    parser.add_argument('-o','--outdir', action="store",help="Output directory. Default: current working directory")
+    parser.add_argument('-o','--output-prefix', action="store",help="Output prefix. Default: peaclock_<species>_<date>")
+    parser.add_argument('--outdir', action="store",help="Output directory. Default: current working directory")
     parser.add_argument('--tempdir',action="store",help="Specify where you want the temp stuff to go. Default: $TMPDIR")
     parser.add_argument("--no-temp",action="store_true",help="Output all intermediate files, for dev purposes.")
     
@@ -44,197 +51,93 @@ def main(sysargs = sys.argv[1:]):
     parser.add_argument("--verbose",action="store_true",help="Print lots of stuff to screen")
     parser.add_argument("-v","--version", action='version', version=f"peaclock {__version__}")
 
-    # Exit with help menu if no args supplied
+    """
+    Exit with help menu if no args supplied
+    """
+
     if len(sysargs)<1: 
         parser.print_help()
         sys.exit(-1)
     else:
         args = parser.parse_args(sysargs)
-
-    # find the master Snakefile
-
-    snakefile = os.path.join(thisdir, 'scripts','Snakefile')
-    if not os.path.exists(snakefile):
-        sys.stderr.write('Error: cannot find Snakefile at {}\n Check installation'.format(snakefile))
-        sys.exit(-1)
     
-    # find the barcodes file
-    if args.read_dir:
-        read_dir = os.path.join(cwd, args.read_dir)
-        if not os.path.exists(read_dir):
-            sys.stderr.write('Error: cannot find reads at {}\n'.format(read_dir))
-            sys.exit(-1)
-        else:
-            fq_files = 0
-            for r,d,f in os.walk(read_dir):
-                for fn in f:
-                    filename = fn.lower()
-                    if filename.endswith(".fastq") or filename.endswith(".fq"):
-                        fq_files +=1
-            if fq_files > 0:
-                print(f"Found {fq_files} fastq files in the input directory")
-            else:
-                sys.stderr.write('Error: cannot find fastq files at {}\n'.format(read_dir))
-                sys.exit(-1)
-    else:
-        sys.stderr.write('Error: please input the path to the fastq read files.\n')
-        sys.exit(-1)
+    """
+    Initialising dicts
+    """
 
-        # find the query fasta
-    if args.barcodes_csv:
-        barcodes_csv = os.path.join(cwd, args.barcodes_csv)
-        if not os.path.exists(barcodes_csv):
-            sys.stderr.write('Error: cannot find barcodes csv at {}\n'.format(barcodes_csv))
-            sys.exit(-1)
-        else:
-            print(f"Input barcodes csv file: {barcodes_csv}")
-            barcodes = []
-            with open(barcodes_csv, newline="") as f:
-                reader = csv.DictReader(f)
-                column_names = reader.fieldnames
-                if "barcode" not in column_names:
-                    sys.stderr.write(f"Error: Barcode file missing header field `barcode`\n")
-                    sys.exit(-1)
-                for row in reader: 
-                    if not row["barcode"].startswith("NB") or not row["barcode"].startswith("BC"):
-                        sys.stderr.write(f"Error: Please provide barcodes in the format `NB01` or `BC01`\n")
-                        sys.exit(-1)
-                    else:
-                        barcodes.append(row["barcode"])
-                print(f"{len(barcodes)} barcodes read in from file")
-                for i in barcodes:
-                    print(f"\t-{i}")
-                barcodes = ",".join(barcodes)
-    else:
-        barcodes_csv = ""
-        print(f"No barcodes csv file input, assuming only one sample.")
+    config = cfunk.get_defaults()
 
-    if args.species:
-        if args.species.lower() in ["apodemus","mus","phalacrocorax"]:
-            species = args.species.lower()
+    configfile = qcfunk.look_for_config(args.configfile,cwd,config)
 
-            cpg_file = os.path.join("data",species,"cpg_sites.csv")
-            reference_file = os.path.join("data",species,"genes.fasta")
-            primers_file = os.path.join("data",species,"primer_sequences.csv")
+    # if a yaml file is detected, add everything in it to the config dict
+    if configfile:
+        qcfunk.parse_yaml_file(configfile, config)
+    
 
-            cpg_sites = pkg_resources.resource_filename('peaclock', cpg_file)
-            reference_fasta = pkg_resources.resource_filename('peaclock', reference_file)
-            primers = pkg_resources.resource_filename('peaclock', primers_file)
-
-            if not os.path.isfile(cpg_sites) or not os.path.isfile(reference_fasta) or not os.path.isfile(primers):
-                sys.stderr.write(f'Error: cannot find data files for {species}\n Check installation')
-                sys.exit(-1)
-        else:
-            sys.stderr.write("""
-Error: please indicate a valid species name.\n
-Use one of the following:
-    - mus\t\t(mouse)
-    - apodemus\t\t(wood mouse)
-    - phalacrocorax\t(shag)
-""")
-            sys.exit(-1)
-
+    """
+    Get outdir, tempdir and the data
+    """
     # default output dir
-    outdir = ''
-    if args.outdir:
-        rel_outdir = args.outdir #for report weaving
-        outdir = os.path.join(cwd, args.outdir)
-        
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-    else:
-        timestamp = str(datetime.now().isoformat(timespec='milliseconds')).replace(":","").replace(".","").replace("T","-")
-        outdir = os.path.join(cwd, timestamp)
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-        rel_outdir = os.path.join(".",timestamp)
+    qcfunk.get_outdir(args.outdir,args.output_prefix,cwd,config)
+
+    # specifying temp directory, outdir if no_temp (tempdir becomes working dir)
+    tempdir = qcfunk.get_temp_dir(args.tempdir, args.no_temp,cwd,config)
+
+    # get data for a particular species, and get species
+    qcfunk.get_package_data(thisdir, args.species, config)
+
+    # add min and max read lengths to the config
+    qcfunk.get_read_length_filter(config)
+
+    # looks for basecalled directory
+    qcfunk.look_for_basecalled_reads(args.read_path,cwd,config)
     
-    print(f"Output files will be written to {outdir}\n")
+    # looks for the csv file saying which barcodes in sample
+    qcfunk.look_for_barcodes_csv(args.barcodes_csv,cwd,config)
 
-    # specifying temp directory
-    tempdir = ''
-    if args.tempdir:
-        to_be_dir = os.path.join(cwd, args.tempdir)
-        if not os.path.exists(to_be_dir):
-            os.mkdir(to_be_dir)
-        temporary_directory = tempfile.TemporaryDirectory(suffix=None, prefix=None, dir=to_be_dir)
-        tempdir = temporary_directory.name
-    else:
-        temporary_directory = tempfile.TemporaryDirectory(suffix=None, prefix=None, dir=None)
-        tempdir = temporary_directory.name
+    """
+    Configure whether guppy barcoder needs to be run
+    """
 
-    # if no temp, just write everything to outdir
-    if args.no_temp:
-        print(f"--no-temp: All intermediate files will be written to {outdir}")
-        tempdir = outdir
+    look_for_guppy_barcoder(args.demultiplex,args.path_to_guppy,cwd,config)
 
-    # how many threads to pass
-    if args.threads:
-        threads = args.threads
-    else:
-        threads = 1
-    print(f"Number of threads: {threads}\n")
-
-    matrix_file = pkg_resources.resource_filename('peaclock', "substitution_matrix.txt")
-    # create the config dict to pass through to the snakemake file
-    config = {
-        "outdir":outdir,
-        "tempdir":tempdir,
-        "read_dir":read_dir,
-        "rel_outdir":rel_outdir,
-        "species":species,
-        "barcodes":barcodes,
-        "barcodes_csv":barcodes_csv,
-        "matrix_file":matrix_file,
-        "cpg_sites":cpg_sites,
-        "reference_fasta":reference_fasta,
-        "primers":primers,
-        # "input_column":args.input_column,
-        # "data_column":args.data_column,
-        "force":"True"
-        }
-
-
-    if args.report:
-        config["report"] = True
-    else:
-        config["report"] = False
-    
-    # config["report_template"] =  os.path.join(thisdir, 'scripts','report_template.pmd')
-    # footer_fig = pkg_resources.resource_filename('peaclock', 'data/footer.png')
-    # config["footer"] = footer_fig
-    
-    if args.threshold:
-        try:
-            threshold = int(args.threshold)
-            config["threshold"] = args.threshold
-        except:
-            sys.stderr.write('Error: threshold must be an integer\n')
-            sys.exit(-1)
-    else:
-        config["threshold"] = "1"
-    
-    if args.barcode_kit:
-        if args.barcode_kit.lower() in ["native","pcr","rapid","all"]:
-            config["barcode_set"] = args.barcode_kit.lower()
-        else:
-            sys.stderr.write(f"Error: Please enter a valid barcode kit: one of\n\t-native\n\t-pcr\n\t-rapid\n\t-all\n")
-            sys.exit(-1)
-    else:
-        config["barcode_set"] = "native"
 
     # don't run in quiet mode if verbose specified
     if args.verbose:
         quiet_mode = False
-        config["quiet_mode"]="False"
+        config["log_string"] = ""
     else:
         quiet_mode = True
-        config["quiet_mode"]="True"
+        lh_path = os.path.realpath(lh.__file__)
+        config["log_string"] = f"--quiet --log-handler-script {lh_path} "
 
-    status = snakemake.snakemake(snakefile, printshellcmds=True,
-                                 dryrun=args.dry_run, forceall=True,force_incomplete=True,workdir=tempdir,
-                                 config=config, cores=threads,lock=False,quiet=quiet_mode
-                                 )
+    qcfunk.add_arg_to_config("threads",args.threads,config)
+    
+    try:
+        config["threads"]= int(config["threads"])
+    except:
+        sys.stderr.write(qcfunk.cyan('Error: Please specifiy an integer for variable `threads`.\n'))
+        sys.exit(-1)
+    threads = config["threads"]
+
+    print(f"Number of threads: {threads}\n")
+
+    # find the master Snakefile
+    snakefile = qcfunk.get_snakefile(thisdir)
+
+    if args.verbose:
+        print("\n**** CONFIG ****")
+        for k in sorted(config):
+            print(qcfunk.green(k), config[k])
+
+        status = snakemake.snakemake(snakefile, printshellcmds=True, forceall=True, force_incomplete=True,
+                                        workdir=tempdir,config=config, cores=threads,lock=False
+                                        )
+    else:
+        logger = custom_logger.Logger()
+        status = snakemake.snakemake(snakefile, printshellcmds=False, forceall=True,force_incomplete=True,workdir=tempdir,
+                                    config=config, cores=threads,lock=False,quiet=True,log_handler=logger.log_handler
+                                    )
 
     if status: # translate "success" into shell exit code of 0
        return 0
