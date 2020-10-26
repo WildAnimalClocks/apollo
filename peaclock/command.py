@@ -38,7 +38,7 @@ def main(sysargs = sys.argv[1:]):
     parser.add_argument('--demultiplex',action="store_true",help="Indicates that your reads have not been demultiplexed and will run guppy demultiplex on your provided read directory",dest="demultiplex")
     parser.add_argument('--path-to-guppy',action="store_true",help="Path to guppy_barcoder executable",dest="path_to_guppy")
 
-    parser.add_argument('-s',"--species", action="store",help="Indicate which species is being sequenced", dest="species")
+    parser.add_argument('-s',"--species", action="store",help="Indicate which species is being sequenced. Options: mus, apodemus", dest="species")
     parser.add_argument("-r","--report",action="store_true",help="Generate markdown report of estimated age")
 
     parser.add_argument('-o','--output-prefix', action="store",help="Output prefix. Default: peaclock_<species>_<date>")
@@ -99,7 +99,7 @@ def main(sysargs = sys.argv[1:]):
     Configure whether guppy barcoder needs to be run
     """
 
-    look_for_guppy_barcoder(args.demultiplex,args.path_to_guppy,cwd,config)
+    pfunk.look_for_guppy_barcoder(args.demultiplex,args.path_to_guppy,cwd,config)
 
 
     # don't run in quiet mode if verbose specified
