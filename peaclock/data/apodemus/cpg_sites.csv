@@ -1,4 +1,4 @@
-gene,mod_id,position(1-based)
+gene,mod_id,position
 PRIMA1,mod_1,54
 PRIMA1,mod_2,127
 PRIMA1,mod_3,141
