@@ -186,6 +186,7 @@ def look_for_guppy_barcoder(demultiplex_arg,path_to_guppy_arg,cwd,config):
             if os.system(os_cmd) != 0:
                 sys.stderr.write(cyan(f'Error: guppy_barcoder at {path_to_guppy} fails to run\n'))
                 sys.exit(-1)
+                
         else:
             sys.stderr.write(cyan(f'Error: please provide the path to guppy_barcoder or run demultiplexing in MinKNOW\n'))
             sys.exit(-1)
@@ -238,8 +239,8 @@ def look_for_barcodes_csv(barcodes_csv_arg,cwd,config):
             config["barcodes_csv"] = ""
     else:
         config["barcodes_csv"] = ""
-        sys.stderr.write(cyan('Error: `--barcodes-csv` needed. Please input the path to the barcodes csv either in the config file or via the command line.\n'))
-        sys.exit(-1)
+        # sys.stderr.write(cyan('Error: `--barcodes-csv` not provided. Please input the path to the barcodes csv either in the config file or via the command line.\n'))
+        # sys.exit(-1)
 
     print(f"Input barcodes csv file: {barcodes_csv}")
     if barcodes_csv:
@@ -263,7 +264,7 @@ def look_for_barcodes_csv(barcodes_csv_arg,cwd,config):
             barcodes = ",".join(barcodes)
     else:
         barcodes_csv = ""
-        print(f"No barcodes csv file input, assuming only one sample.")
+        print(green(f"No barcodes csv file input"))
 
 def check_barcode_kit():
 
