@@ -13,6 +13,7 @@ import csv
 import os
 from datetime import datetime
 from Bio import SeqIO
+import csv
 
 import pkg_resources
 from . import _program
@@ -85,6 +86,8 @@ def main(sysargs = sys.argv[1:]):
 
     # get data for a particular species, and get species
     qcfunk.get_package_data(thisdir, args.species, config)
+    print(config["cpg_sites"])
+    config["cpg_header"] = qcfunk.make_cpg_header(config["cpg_sites"])
 
     # add min and max read lengths to the config
     qcfunk.get_read_length_filter(config)
