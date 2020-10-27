@@ -2,8 +2,6 @@ import os
 from Bio import SeqIO
 import peaclockfunks as qcfunk
 
-barcodes = config["barcode_str"].split(",")
-config["barcodes"] = barcodes
 
 rule all:
     input:
