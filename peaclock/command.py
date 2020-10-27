@@ -36,7 +36,7 @@ def main(sysargs = sys.argv[1:]):
     parser.add_argument('-k','--barcode-kit',help="Indicates which barcode kit was used. Default: native. Options: native, rapid, pcr, all",dest="barcode_kit")
 
     parser.add_argument('--demultiplex',action="store_true",help="Indicates that your reads have not been demultiplexed and will run guppy demultiplex on your provided read directory",dest="demultiplex")
-    parser.add_argument('--path-to-guppy',action="store_true",help="Path to guppy_barcoder executable",dest="path_to_guppy")
+    parser.add_argument('--path-to-guppy',action="store",help="Path to guppy_barcoder executable",dest="path_to_guppy")
 
     parser.add_argument('-s',"--species", action="store",help="Indicate which species is being sequenced. Options: mus, apodemus", dest="species")
     parser.add_argument("-r","--report",action="store_true",help="Generate markdown report of estimated age")
@@ -99,7 +99,7 @@ def main(sysargs = sys.argv[1:]):
     Configure whether guppy barcoder needs to be run
     """
 
-    pfunk.look_for_guppy_barcoder(args.demultiplex,args.path_to_guppy,cwd,config)
+    qcfunk.look_for_guppy_barcoder(args.demultiplex,args.path_to_guppy,cwd,config)
 
 
     # don't run in quiet mode if verbose specified
