@@ -72,14 +72,6 @@ rule count_cpgs:
                                 "{config[log_string]} "
                                 "--directory {config[tempdir]:q} "
                                 "--configfile {output.yaml:q} " 
-                                # "--config "
-                                # f"barcode_str={barcode_str} "
-                                # "outdir={config[outdir]:q} "
-                                # "tempdir={config[tempdir]:q} "
-                                # "genes={input.genes:q} "
-                                # "cpg_sites={input.cpg_sites:q} "
-                                # "primer_sequences={input.primer_sequences:q} "
-                                # "read_path={config[read_path]:q} "
                                 "--cores {threads} ")
 
 

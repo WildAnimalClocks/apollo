@@ -157,7 +157,7 @@ def get_read_length_filter(config):
     config["max_length"] = lengths[-1] + 200
 
 def get_package_data(thisdir,species_arg, config):
-    matrix_file = pkg_resources.resource_filename('peaclock', "substitution_matrix.txt")
+    matrix_file = pkg_resources.resource_filename('peaclock', "data/substitution_matrix.txt")
     config["matrix_file"] = matrix_file
 
     add_arg_to_config("species",species_arg, config)
@@ -195,10 +195,15 @@ def look_for_guppy_barcoder(demultiplex_arg,path_to_guppy_arg,cwd,config):
             if os_cmd != 0:
                 sys.stderr.write(cyan(f'Error: guppy_barcoder at {path_to_guppy} fails to run\n'))
                 sys.exit(-1)
-
+        
         else:
-            sys.stderr.write(cyan(f'Error: please provide the path to guppy_barcoder (`--path-to-guppy`) or run demultiplexing in MinKNOW\n'))
-            sys.exit(-1)
+            os_cmd = os.system(f"guppy_barcoder")
+            if os_cmd != 0:
+                sys.stderr.write(cyan(f'Error: please provide the path to guppy_barcoder (`--path-to-guppy`), add guppy_barcoder to your path, or run demultiplexing in MinKNOW\n'))
+                sys.exit(-1)
+            else:
+                config["path_to_guppy"]
+
 
 def look_for_basecalled_reads(read_path_arg,cwd,config):
 
