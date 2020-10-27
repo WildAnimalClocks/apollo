@@ -30,7 +30,7 @@ rule gather_demuxed_reads:
             SeqIO.write(reads,fw,"fastq")
             print(qcfunk.green(f"Barcode {params.barcode}: ") + f"{len(reads)}")
 
-rule ParaMethR:
+rule paramether:
     input:
         reads = rules.gather_demuxed_reads.output.reads,
         refs = config["genes"],
