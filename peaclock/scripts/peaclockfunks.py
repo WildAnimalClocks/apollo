@@ -61,9 +61,9 @@ def look_for_config(configfile_arg,cwd, config):
             config["configfile"] = configfile
         else:
             configfile = ""
+            config["configfile"] = ""
             print(green(f'Note: no configfile input'))
-        
-    
+
     return configfile
 
 def parse_yaml_file(configfile,config):
@@ -296,11 +296,11 @@ def get_snakefile(thisdir):
     return snakefile
 
 def make_cpg_header(cpg_csv):
-    cpg_string= ["sample"]
-    cpgs = []
+    cpgs= ["sample"]
     with open(cpg_csv,"r") as f:
         cpg_file = csv.DictReader(f)
         for row in cpg_file:
+            print(row)
             cpgs.append(row["gene"].lower()+ "_" + row["position"])
     cpg_string = ",".join(cpgs)
     return cpg_string
