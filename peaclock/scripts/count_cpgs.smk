@@ -31,7 +31,7 @@ rule gather_demuxed_reads:
 rule paramether:
     input:
         reads = rules.gather_demuxed_reads.output.reads,
-        refs = config["genes"],
+        genes = config["genes"],
         cpg_sites = config["cpg_sites"],
         matrix_file = config["matrix_file"],
     params:
@@ -45,7 +45,8 @@ rule paramether:
             --reads {input.reads:q} \
             --reference {input.genes:q} \
             --cpg_csv {input.cpg_sites:q} \
-            --substitution_matrix {input.matrix:q} \
+            --cpg-header {config[cpg_header]} \
+            --substitution_matrix {input.matrix_file:q} \
             --sample {params.sample} \
             --report {output.counts_wide:q} \
             --counts {output.counts_long:q}
@@ -57,8 +58,8 @@ rule gather_reports:
     output:
         os.path.join(config["outdir"],"reports","cpg_wide.csv")
     run:
-
-        header = qcfunk.make_cpg_header(config['cpg_csv'])
+        header = config["cpg_header"]
+        
         with open(output[0],"w") as fw:
             fw.write(f"{header}\n")
             # fw.write("sample,gm7_103,gm7_112,gm7_133,gm7_144,gm7_148,gm7_159,gm7_64,gm7_67,gm7_76,gm7_79,hsp4_100,hsp4_105,hsp4_120,hsp4_126,hsp4_131,hsp4_144,hsp4_70,kcns1_100,kcns1_103,kcns1_111,kcns1_116,kcns1_119,kcns1_121,kcns1_125,kcns1_134,kcns1_139,kcns1_144,kcns1_146,kcns1_162,kcns1_165,kcns1_168,kcns1_178,kcns1_30,kcns1_52,kcns1_54,kcns1_57,kcns1_65,kcns1_80,prima1_127,prima1_141,prima1_54\n")
@@ -66,7 +67,6 @@ rule gather_reports:
                 with open(str(fn),"r") as f:
                     for l in f:
                         fw.write(l.rstrip() + '\n')
-        # shell("cat temp.txt {input} > {output} && rm temp.txt")
 
 rule gather_counts:
     input:
@@ -80,7 +80,3 @@ rule gather_counts:
                 with open(str(fn),"r") as f:
                     for l in f:
                         fw.write(l.rstrip() + '\n')
-
-            # shell("cat temp.txt '{input}' > '{output}' && rm temp.txt")
-
-

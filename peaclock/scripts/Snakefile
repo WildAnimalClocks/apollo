@@ -5,6 +5,9 @@ import yaml
 
 import peaclockfunks as qcfunk
 
+if config.get("force"):
+    config["force"] = "--forceall "
+
 ##### Target rules #####
 
 rule all:
