@@ -170,29 +170,30 @@ if __name__ == '__main__':
 
     cpg_order = args.cpg_header.split(",")
     for i in cpg_order:
-        c_and_t = cpg_counts[i]["C"] + cpg_counts[i]["T"]
-        prop = "NA"
-        if c_and_t > 50:
-            prop = round(cpg_counts[i]["C"] / c_and_t, 3)
-        count_str += f"{prop},"
-        
-        
+        if not i == "sample":
+            c_and_t = cpg_counts[i]["C"] + cpg_counts[i]["T"]
+            prop = "NA"
+            if c_and_t > 50:
+                prop = round(cpg_counts[i]["C"] / c_and_t, 3)
+            count_str += f"{prop},"
+            
+            
 
-        x = [j for j in cpg_counts[i]]
-        y = [cpg_counts[i][j] for j in cpg_counts[i]]
+            x = [j for j in cpg_counts[i]]
+            y = [cpg_counts[i][j] for j in cpg_counts[i]]
 
-        print_string = i + '\t'
-        for index in range(len(x)):
-            print_string += f"{x[index]}\t{y[index]}\t"
+            print_string = i + '\t'
+            for index in range(len(x)):
+                print_string += f"{x[index]}\t{y[index]}\t"
 
-        total = sum(cpg_counts[i].values())
+            total = sum(cpg_counts[i].values())
 
-        c = cpg_counts[i]["C"]
-        t = cpg_counts[i]["T"]
-        a = cpg_counts[i]["A"]
-        g= cpg_counts[i]["G"]
-        gap = cpg_counts[i]["-"]
-        fw2.write(f"{args.sample},{i},{total},{c},{t},{a},{g},{gap}\n")
+            c = cpg_counts[i]["C"]
+            t = cpg_counts[i]["T"]
+            a = cpg_counts[i]["A"]
+            g= cpg_counts[i]["G"]
+            gap = cpg_counts[i]["-"]
+            fw2.write(f"{args.sample},{i},{total},{c},{t},{a},{g},{gap}\n")
 
     count_str = count_str.rstrip(',')
     fw.write(count_str+'\n')
