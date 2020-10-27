@@ -26,12 +26,15 @@ def get_defaults():
         "no_temp":False,
         "demultiplex":False,
         "path_to_guppy":False,
+        "barcode_kit":"native",
         "output_prefix":"peaclock",
         "species":"apodemus",
         "barcodes":"native",
+        "barcodes_csv":"",
         "configfile":"config.yaml",
         "allowed_species":["apodemus","mus","phalacrocorax"],
-        "force":True
+        "force":True,
+        "threads":1
         }
     return default_dict
 
@@ -58,7 +61,8 @@ def look_for_config(configfile_arg,cwd, config):
             config["configfile"] = configfile
         else:
             configfile = ""
-            print(cyan(f'Note: cannot find configfile at {configfile}'))
+            print(green(f'Note: no configfile input'))
+        
     
     return configfile
 
@@ -175,20 +179,25 @@ def get_package_data(thisdir,species_arg, config):
 
 
 def look_for_guppy_barcoder(demultiplex_arg,path_to_guppy_arg,cwd,config):
-    qcfunk.add_arg_to_config(demultiplex_arg, "demultiplex",config)
-    qcfunk.add_arg_to_config(path_to_guppy_arg, "path_to_guppy",config)
-
+    add_arg_to_config("demultiplex", demultiplex_arg, config)
+    add_arg_to_config("path_to_guppy", path_to_guppy_arg, config)
+    
     if config["demultiplex"]:
         if config["path_to_guppy"]:
             expanded_path = os.path.expanduser(config["path_to_guppy"])
-            path_to_guppy = os.path.join(cwd,expanded_path,"guppy_barcoder")
-            os_cmd = path_to_guppy
-            if os.system(os_cmd) != 0:
+            if config["path_to_guppy"].endswith("guppy_barcoder"):
+                path_to_guppy = os.path.join(cwd,expanded_path)
+            else:
+                path_to_guppy = os.path.join(cwd,expanded_path,"guppy_barcoder")
+                config["path_to_guppy"] = path_to_guppy
+            os_cmd = os.system(f"{path_to_guppy}")
+
+            if os_cmd != 0:
                 sys.stderr.write(cyan(f'Error: guppy_barcoder at {path_to_guppy} fails to run\n'))
                 sys.exit(-1)
-                
+
         else:
-            sys.stderr.write(cyan(f'Error: please provide the path to guppy_barcoder or run demultiplexing in MinKNOW\n'))
+            sys.stderr.write(cyan(f'Error: please provide the path to guppy_barcoder (`--path-to-guppy`) or run demultiplexing in MinKNOW\n'))
             sys.exit(-1)
 
 def look_for_basecalled_reads(read_path_arg,cwd,config):
@@ -235,15 +244,9 @@ def look_for_barcodes_csv(barcodes_csv_arg,cwd,config):
         if config["barcodes_csv"]:
             expanded_path = os.path.expanduser(config["barcodes_csv"])
             barcodes_csv = os.path.join(config["path_to_config"], expanded_path)
-        else:
-            config["barcodes_csv"] = ""
-    else:
-        config["barcodes_csv"] = ""
-        # sys.stderr.write(cyan('Error: `--barcodes-csv` not provided. Please input the path to the barcodes csv either in the config file or via the command line.\n'))
-        # sys.exit(-1)
-
-    print(f"Input barcodes csv file: {barcodes_csv}")
+    
     if barcodes_csv:
+        print(f"Input barcodes csv file: {barcodes_csv}")
         barcodes = []
         with open(barcodes_csv, newline="") as f:
             reader = csv.DictReader(f)
@@ -262,9 +265,12 @@ def look_for_barcodes_csv(barcodes_csv_arg,cwd,config):
             for i in barcodes:
                 print(f"  - {i}")
             barcodes = ",".join(barcodes)
+            config['barcodes_csv'] = barcodes_csv
+            config["barcodes"] = barcodes
     else:
-        barcodes_csv = ""
-        print(green(f"No barcodes csv file input"))
+        config['barcodes_csv'] = ""
+        config["barcodes"] = ""
+        print(green(f"Note: No barcodes csv input"))
 
 def check_barcode_kit():
 
@@ -286,11 +292,12 @@ def get_snakefile(thisdir):
 
 def make_cpg_header(cpg_csv):
     cpg_string= ["sample"]
+    cpgs = []
     with open(cpg_csv,"r") as f:
         cpg_file = csv.DictReader(f)
         for row in cpg_file:
-            cpg_string.append(row["gene"].lower()+ "_" + row["position(1-based)"])
-    cpg_string = ",".join(cpg_string)
+            cpgs.append(row["gene"].lower()+ "_" + row["position"])
+    cpg_string = ",".join(cpgs)
     return cpg_string
 
 def colour(text, text_colour):
