@@ -14,6 +14,7 @@ def parse_args():
     parser.add_argument("--reads", action="store", type=str, dest="reads")
     parser.add_argument("--references", action="store", type=str, dest="references")
     parser.add_argument("--cpg_csv", action="store", type=str, dest="cpg_csv")
+    parser.add_argument("--cpg-header",action="store",type=str,dest="cpg_header")
     parser.add_argument("--substitution_matrix", action="store", type=str, dest="substitution_matrix")
     parser.add_argument("--report", action="store", type=str, dest="report")
     parser.add_argument("--sample", action="store", type=str, dest="sample")
@@ -167,34 +168,31 @@ if __name__ == '__main__':
 
     count_str = str(args.sample) + ","
 
-    with open(cpg_csv,"r") as f:
-        cpg_file = csv.DictReader(f)
-        for row in cpg_file:
-            i = row["gene"].lower()+ "_" + row["position"]
+    cpg_order = args.cpg_header.split(",")
+    for i in cpg_order:
+        c_and_t = cpg_counts[i]["C"] + cpg_counts[i]["T"]
+        prop = "NA"
+        if c_and_t > 50:
+            prop = round(cpg_counts[i]["C"] / c_and_t, 3)
+        count_str += f"{prop},"
+        
+        
 
-            c_and_t = cpg_counts[i]["C"] + cpg_counts[i]["T"]
-            prop = "NA"
-            if c_and_t > 50:
-                prop = round(cpg_counts[i]["C"] / c_and_t, 3)
-            count_str += f"{prop},"
-            
-            
+        x = [j for j in cpg_counts[i]]
+        y = [cpg_counts[i][j] for j in cpg_counts[i]]
 
-            x = [j for j in cpg_counts[i]]
-            y = [cpg_counts[i][j] for j in cpg_counts[i]]
+        print_string = i + '\t'
+        for index in range(len(x)):
+            print_string += f"{x[index]}\t{y[index]}\t"
 
-            print_string = i + '\t'
-            for index in range(len(x)):
-                print_string += f"{x[index]}\t{y[index]}\t"
+        total = sum(cpg_counts[i].values())
 
-            total = sum(cpg_counts[i].values())
-
-            c = cpg_counts[i]["C"]
-            t = cpg_counts[i]["T"]
-            a = cpg_counts[i]["A"]
-            g= cpg_counts[i]["G"]
-            gap = cpg_counts[i]["-"]
-            fw2.write(f"{args.sample},{i},{total},{c},{t},{a},{g},{gap}\n")
+        c = cpg_counts[i]["C"]
+        t = cpg_counts[i]["T"]
+        a = cpg_counts[i]["A"]
+        g= cpg_counts[i]["G"]
+        gap = cpg_counts[i]["-"]
+        fw2.write(f"{args.sample},{i},{total},{c},{t},{a},{g},{gap}\n")
 
     count_str = count_str.rstrip(',')
     fw.write(count_str+'\n')
