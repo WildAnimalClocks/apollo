@@ -13,17 +13,18 @@ rule all:
 
 rule demultiplex:
     params:
-        outdir = os.path.join(config["output_path"],"demultiplexed_reads")
+        outdir = os.path.join(config["outdir"],"demultiplexed_reads")
     threads:
         workflow.threads
     output:
-        demux_prompt = os.path.join(config["output_path"],"demultiplexed_reads", "demuxed.txt")
+        demux_prompt = os.path.join(config["outdir"],"demultiplexed_reads", "demuxed.txt")
     run:
         if config["demultiplex"]:
             shell("""
             {config[path_to_guppy]} \
             -i {config[read_path]} \
             -s {params.outdir} \
+            -t {workflow.threads} \
             --arrangements_files "barcode_arrs_nb12.cfg barcode_arrs_nb24.cfg" \
             && touch {output.demux_prompt}
             """)
@@ -34,14 +35,15 @@ rule demultiplex:
 rule count_cpgs:
     input:
         snakefile = os.path.join(workflow.current_basedir,"find_snps.smk"),
-        demux_prompt = os.path.join(config["output_path"],"demultiplexed_reads", "demuxed.txt"),
+        demux_prompt = os.path.join(config["outdir"],"demultiplexed_reads", "demuxed.txt"),
         genes = config["genes"],
         cpg_sites = config["cpg_sites"],
         primer_sequences = config["primer_sequences"],
         matrix_file = config["matrix_file"]
     output:
-        os.path.join(config["outdir"], "reports","cpg_counts.csv"),
-        os.path.join(config["outdir"], "reports","cpg_wide.csv")
+        yaml = os.path.join(config["tempdir"], "config.yaml"),
+        counts = os.path.join(config["outdir"], "reports","cpg_counts.csv"),
+        wide = os.path.join(config["outdir"], "reports","cpg_wide.csv")
     run:
         barcodes = []
         for r,d,f in os.walk(config["read_path"]):
@@ -50,19 +52,24 @@ rule count_cpgs:
                     print(name)
                     barcodes.append(name)
         barcode_str = ','.join(barcodes)
+        config["barcodes"] = barcodes
+
+        with open(output.yaml, 'w') as fw:
+            yaml.dump(config, fw) #so at the moment, every config option gets passed to the report
 
         shell("snakemake --nolock --snakefile {input.snakefile:q} "
                                 "{config[force]} "
                                 "{config[log_string]} "
                                 "--directory {config[tempdir]:q} "
-                                "--config "
-                                f"barcode_str={barcode_str} "
-                                "outdir={config[outdir]:q} "
-                                "tempdir={config[tempdir]:q} "
-                                "genes={input.genes:q} "
-                                "cpg_sites={input.cpg_sites:q} "
-                                "primer_sequences={input.primer_sequences:q} "
-                                "read_path={config[read_path]:q} "
+                                "--configfile {output.yaml:q}" 
+                                # "--config "
+                                # f"barcode_str={barcode_str} "
+                                # "outdir={config[outdir]:q} "
+                                # "tempdir={config[tempdir]:q} "
+                                # "genes={input.genes:q} "
+                                # "cpg_sites={input.cpg_sites:q} "
+                                # "primer_sequences={input.primer_sequences:q} "
+                                # "read_path={config[read_path]:q} "
                                 "--cores {workflow.cores} ")
 
 
