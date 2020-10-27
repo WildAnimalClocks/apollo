@@ -28,39 +28,41 @@ cwd = os.getcwd()
 def main(sysargs = sys.argv[1:]):
 
     parser = argparse.ArgumentParser(prog = _program, 
-    description='peaclock: Predicted Epigenetic Age Clock', 
-    usage='''peaclock -i <path/to/reads> -b <path/to/data> [options]''')
+    description=qcfunk.preamble(__version__), 
+    usage='''peaclock -i <path/to/reads> [options]
+        peaclock -c <config.yaml>''')
 
-    parser.add_argument('-i','--read-path',help="Input the path to the reads",dest="read_path")
-    parser.add_argument('-c',"--configfile",help="Config file with PEAClock run settings",dest="configfile")
-    parser.add_argument('-b','--barcodes-csv',help="CSV file describing which barcodes were used on which sample",dest="barcodes_csv")
-    parser.add_argument('-k','--barcode-kit',help="Indicates which barcode kit was used. Default: native. Options: native, rapid, pcr, all",dest="barcode_kit")
-
-    parser.add_argument('--demultiplex',action="store_true",help="Indicates that your reads have not been demultiplexed and will run guppy demultiplex on your provided read directory",dest="demultiplex")
-    parser.add_argument('--path-to-guppy',action="store",help="Path to guppy_barcoder executable",dest="path_to_guppy")
-
-    parser.add_argument('-s',"--species", action="store",help="Indicate which species is being sequenced. Options: mus, apodemus", dest="species")
-    parser.add_argument("-r","--report",action="store_true",help="Generate markdown report of estimated age")
-
-    parser.add_argument('-o','--output-prefix', action="store",help="Output prefix. Default: peaclock_<species>_<date>")
-    parser.add_argument('--outdir', action="store",help="Output directory. Default: current working directory")
-    parser.add_argument('--tempdir',action="store",help="Specify where you want the temp stuff to go. Default: $TMPDIR")
-    parser.add_argument("--no-temp",action="store_true",help="Output all intermediate files, for dev purposes.")
+    io_group = parser.add_argument_group('input output options')
+    io_group.add_argument('-c',"--configfile",help="Config file with PEAClock run settings",dest="configfile")
+    io_group.add_argument('-i','--read-path',help="Path to the directory containing fastq files",dest="read_path")
+    io_group.add_argument('-o','--output-prefix', action="store",help="Output prefix. Default: peaclock_<species>_<date>")
+    io_group.add_argument('--outdir', action="store",help="Output directory. Default: current working directory")
+    io_group.add_argument('--tempdir',action="store",help="Specify where you want the temp stuff to go. Default: $TMPDIR")
     
-    parser.add_argument('-n', '--dry-run', action='store_true',help="Go through the motions but don't actually run")
-    parser.add_argument('-t', '--threads', action='store',type=int,help="Number of threads")
-    parser.add_argument("--verbose",action="store_true",help="Print lots of stuff to screen")
-    parser.add_argument("-v","--version", action='version', version=f"peaclock {__version__}")
+
+    barcode_group = parser.add_argument_group('barcode options')
+    barcode_group.add_argument('-b','--barcodes-csv',help="CSV file describing which barcodes were used on which sample",dest="barcodes_csv")
+    barcode_group.add_argument('-k','--barcode-kit',help="Indicates which barcode kit was used. Default: native. Options: native, rapid, pcr, all",dest="barcode_kit")
+
+    demux_group = parser.add_argument_group('demultiplexing options')
+    demux_group.add_argument('--demultiplex',action="store_true",help="Indicates that your reads have not been demultiplexed and will run guppy demultiplex on your provided read directory",dest="demultiplex")
+    demux_group.add_argument('--path-to-guppy',action="store",help="Path to guppy_barcoder executable",dest="path_to_guppy")
+
+    run_group = parser.add_argument_group('run options')
+    run_group.add_argument('-s',"--species", action="store",help="Indicate which species is being sequenced. Options: mus, apodemus", dest="species")
+    run_group.add_argument("-r","--report",action="store_true",help="Generate markdown report of estimated age")
+    
+    misc_group = parser.add_argument_group('misc options')
+    misc_group.add_argument('-t', '--threads', action='store',type=int,help="Number of threads")
+    misc_group.add_argument("--no-temp",action="store_true",help="Output all intermediate files, for dev purposes.")
+    misc_group.add_argument("--verbose",action="store_true",help="Print lots of stuff to screen")
+    misc_group.add_argument("-v","--version", action='version', version=f"peaclock {__version__}")
 
     """
     Exit with help menu if no args supplied
     """
 
-    if len(sysargs)<1: 
-        parser.print_help()
-        sys.exit(-1)
-    else:
-        args = parser.parse_args(sysargs)
+    args = parser.parse_args(sysargs)
     
     """
     Initialising dicts
@@ -73,8 +75,11 @@ def main(sysargs = sys.argv[1:]):
     # if a yaml file is detected, add everything in it to the config dict
     if configfile:
         qcfunk.parse_yaml_file(configfile, config)
+    else:
+        if len(sysargs)<1: 
+            parser.print_help()
+            sys.exit(0)
     
-
     """
     Get outdir, tempdir and the data
     """
@@ -86,7 +91,7 @@ def main(sysargs = sys.argv[1:]):
 
     # get data for a particular species, and get species
     qcfunk.get_package_data(thisdir, args.species, config)
-    print(config["cpg_sites"])
+
     config["cpg_header"] = qcfunk.make_cpg_header(config["cpg_sites"])
 
     # add min and max read lengths to the config

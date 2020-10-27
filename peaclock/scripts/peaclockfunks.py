@@ -11,6 +11,7 @@ from datetime import date
 import tempfile
 import pkg_resources
 import yaml
+import subprocess
 
 END_FORMATTING = '\033[0m'
 BOLD = '\033[1m'
@@ -31,7 +32,7 @@ def get_defaults():
         "species":"apodemus",
         "barcodes":"native",
         "barcodes_csv":"",
-        "configfile":"config.yaml",
+        "configfile":False,
         "allowed_species":["apodemus","mus","phalacrocorax"],
         "force":True,
         "threads":1
@@ -45,8 +46,10 @@ def add_arg_to_config(key,arg,config):
 def look_for_config(configfile_arg,cwd, config):
     configfile = ""
     if configfile_arg:
-        configfile = os.path.join(cwd,configfile_arg)
-        path_to_file = os.path.abspath(os.path.dirname(input_file))
+        expanded_path = os.path.expanduser(configfile_arg)
+        configfile = os.path.join(cwd,expanded_path)
+
+        path_to_file = os.path.abspath(os.path.dirname(configfile))
         config["path_to_config"] = path_to_file
 
         if os.path.isfile(configfile):
@@ -54,15 +57,29 @@ def look_for_config(configfile_arg,cwd, config):
         else:
             sys.stderr.write(cyan(f'Error: cannot find configfile at {configfile}\n'))
             sys.exit(-1)
-    else:
-        configfile = os.path.join(cwd, "config.yaml")
-        config["path_to_config"] = cwd
+
+    elif config["configfile"]:
+        expanded_path = os.path.expanduser(config["configfile"])
+        configfile = os.path.join(cwd,expanded_path)
+
+        path_to_file = os.path.abspath(os.path.dirname(configfile))
+        config["path_to_config"] = path_to_file
+
         if os.path.isfile(configfile):
             config["configfile"] = configfile
         else:
             configfile = ""
             config["configfile"] = ""
-            print(green(f'Note: no configfile input'))
+            print(green(f'Note: cannot find configfile input'))
+    else:
+        configfile = os.path.join(cwd, "config.yaml")
+        
+        if os.path.isfile(configfile):
+            config["configfile"] = configfile
+            config["path_to_config"] = cwd
+        else:
+            configfile = ""
+            config["configfile"] = ""
 
     return configfile
 
@@ -190,14 +207,14 @@ def look_for_guppy_barcoder(demultiplex_arg,path_to_guppy_arg,cwd,config):
             else:
                 path_to_guppy = os.path.join(cwd,expanded_path,"guppy_barcoder")
                 config["path_to_guppy"] = path_to_guppy
-            os_cmd = os.system(f"{path_to_guppy}")
+            os_cmd = os.system(f"{path_to_guppy} -v")
 
             if os_cmd != 0:
                 sys.stderr.write(cyan(f'Error: guppy_barcoder at {path_to_guppy} fails to run\n'))
                 sys.exit(-1)
         
         else:
-            os_cmd = os.system(f"guppy_barcoder")
+            os_cmd = os.system(f"guppy_barcoder -v")
             if os_cmd != 0:
                 sys.stderr.write(cyan(f'Error: please provide the path to guppy_barcoder (`--path-to-guppy`), add guppy_barcoder to your path, or run demultiplexing in MinKNOW\n'))
                 sys.exit(-1)
@@ -220,7 +237,7 @@ def look_for_basecalled_reads(read_path_arg,cwd,config):
         if config["read_path"]:
             expanded_path = os.path.expanduser(config["read_path"])
             read_path = os.path.join(config["path_to_config"], expanded_path)
-        
+            config["read_path"] = read_path
             fq_files = 0
             for r,d,f in os.walk(read_path):
                 for fn in f:
@@ -300,7 +317,6 @@ def make_cpg_header(cpg_csv):
     with open(cpg_csv,"r") as f:
         cpg_file = csv.DictReader(f)
         for row in cpg_file:
-            print(row)
             cpgs.append(row["gene"].lower()+ "_" + row["position"])
     cpg_string = ",".join(cpgs)
     return cpg_string
@@ -348,3 +364,23 @@ def yellow(text):
 
 def bold_underline(text):
     return BOLD + UNDERLINE + text + END_FORMATTING
+
+
+
+def preamble(v):
+    print(green("""\n
+                                            __                 __     
+                ______   ____ ____    ____ |  |   ____   ____ |  | __ 
+                \____ \_/ __ \\__  \ _/ ___\|  |  /  _ \_/ ___\|  |/ / 
+                |  |_> >  ___/ / __ \\  \___|  |_(  <_> )  \___|    <  
+                |   __/ \___ / ____  /\___ /____/\____/ \___  >__|_ \ 
+                |__|                                                   
+                     **** Predicted Epigenetic Age Clock****
+                """)+green(f"""
+                                        {v}""")+green("""
+                        ****************************************
+                                                                
+                            Aine O'Toole & Tom Little           
+                                Edinburgh University          
+\n"""))
+
