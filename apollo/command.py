@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from peaclock import __version__
+from apollo import __version__
 import setuptools
 import argparse
 import os.path
@@ -18,7 +18,7 @@ import csv
 import pkg_resources
 from . import _program
 
-import peaclockfunks as qcfunk
+import apollofunks as qcfunk
 import custom_logger as custom_logger
 import log_handler_handle as lh
 
@@ -29,13 +29,13 @@ def main(sysargs = sys.argv[1:]):
 
     parser = argparse.ArgumentParser(prog = _program, 
     description=qcfunk.preamble(__version__), 
-    usage='''peaclock -i <path/to/reads> [options]
-        peaclock -c <config.yaml>''')
+    usage='''apollo -i <path/to/reads> [options]
+        apollo -c <config.yaml>''')
 
     io_group = parser.add_argument_group('input output options')
-    io_group.add_argument('-c',"--configfile",help="Config file with PEAClock run settings",dest="configfile")
+    io_group.add_argument('-c',"--configfile",help="Config file with apollo run settings",dest="configfile")
     io_group.add_argument('-i','--read-path',help="Path to the directory containing fastq files",dest="read_path")
-    io_group.add_argument('-o','--output-prefix', action="store",help="Output prefix. Default: peaclock_<species>_<date>")
+    io_group.add_argument('-o','--output-prefix', action="store",help="Output prefix. Default: apollo_<species>_<date>")
     io_group.add_argument('--outdir', action="store",help="Output directory. Default: current working directory")
     io_group.add_argument('--tempdir',action="store",help="Specify where you want the temp stuff to go. Default: $TMPDIR")
     
@@ -56,7 +56,7 @@ def main(sysargs = sys.argv[1:]):
     misc_group.add_argument('-t', '--threads', action='store',type=int,help="Number of threads")
     misc_group.add_argument("--no-temp",action="store_true",help="Output all intermediate files, for dev purposes.")
     misc_group.add_argument("--verbose",action="store_true",help="Print lots of stuff to screen")
-    misc_group.add_argument("-v","--version", action='version', version=f"peaclock {__version__}")
+    misc_group.add_argument("-v","--version", action='version', version=f"apollo {__version__}")
 
     """
     Exit with help menu if no args supplied

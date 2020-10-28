@@ -28,7 +28,7 @@ def get_defaults():
         "demultiplex":False,
         "path_to_guppy":False,
         "barcode_kit":"native",
-        "output_prefix":"peaclock",
+        "output_prefix":"apollo",
         "species":"apodemus",
         "barcodes":"native",
         "barcodes_csv":"",
@@ -174,7 +174,7 @@ def get_read_length_filter(config):
     config["max_length"] = lengths[-1] + 200
 
 def get_package_data(thisdir,species_arg, config):
-    matrix_file = pkg_resources.resource_filename('peaclock', "data/substitution_matrix.txt")
+    matrix_file = pkg_resources.resource_filename('apollo', "data/substitution_matrix.txt")
     config["matrix_file"] = matrix_file
 
     add_arg_to_config("species",species_arg, config)
@@ -182,15 +182,15 @@ def get_package_data(thisdir,species_arg, config):
     species = config["species"]
 
     if species in config["allowed_species"]:
-        cpg_sites = pkg_resources.resource_filename('peaclock', f"data/{species}/cpg_sites.csv")
-        genes = pkg_resources.resource_filename('peaclock', f"data/{species}/genes.fasta")
-        primer_sequences = pkg_resources.resource_filename('peaclock', f"data/{species}/primer_sequences.csv")
+        cpg_sites = pkg_resources.resource_filename('apollo', f"data/{species}/cpg_sites.csv")
+        genes = pkg_resources.resource_filename('apollo', f"data/{species}/genes.fasta")
+        primer_sequences = pkg_resources.resource_filename('apollo', f"data/{species}/primer_sequences.csv")
 
         config["cpg_sites"] = cpg_sites
         config["genes"] = genes
         config["primer_sequences"] = primer_sequences
     else:
-        sys.stderr.write(cyan(f'Error: {species} specified not configured in PEAClock\nPlease select an alternative species\n'))
+        sys.stderr.write(cyan(f'Error: {species} specified not configured in apollo\nPlease select an alternative species\n'))
         sys.exit(-1)
 
 
@@ -369,14 +369,14 @@ def bold_underline(text):
 
 def preamble(v):
     print(green("""\n
-                                            __                 __     
-                ______   ____ ____    ____ |  |   ____   ____ |  | __ 
-                \____ \_/ __ \\__  \ _/ ___\|  |  /  _ \_/ ___\|  |/ / 
-                |  |_> >  ___/ / __ \\  \___|  |_(  <_> )  \___|    <  
-                |   __/ \___ / ____  /\___ /____/\____/ \___  >__|_ \ 
-                |__|                                                   
-                     **** Predicted Epigenetic Age Clock****
-                """)+green(f"""
+                                           .__  .__          
+                      _____  ______   ____ |  | |  |   ____  
+                      \__  \ \____ \ /  _ \|  | |  |  /  _ \ 
+                       / __ \|  |_> >  <_> )  |_|  |_(  <_> ) 
+                      (____  /   __/ \____/|____/____/\____/ 
+                           \/|__|                            
+                **** Age Prediction Of Little's Little Organisms ****
+""")+green(f"""
                                         {v}""")+green("""
                         ****************************************
                                                                 

@@ -1,6 +1,6 @@
 import os
 from Bio import SeqIO
-import peaclockfunks as qcfunk
+import apollofunks as qcfunk
 
 
 rule all:

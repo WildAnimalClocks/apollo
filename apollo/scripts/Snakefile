@@ -3,7 +3,7 @@ import collections
 from Bio import SeqIO
 import yaml
 
-import peaclockfunks as qcfunk
+import apollofunks as qcfunk
 
 if config.get("force"):
     config["force"] = "--forceall "

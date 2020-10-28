@@ -3,18 +3,18 @@ import glob
 import os
 import pkg_resources
 
-from peaclock import __version__, _program
+from apollo import __version__, _program
 
-setup(name='peaclock',
+setup(name='apollo',
       version=__version__,
       packages=find_packages(),
-      scripts=["peaclock/scripts/Snakefile",
-            "peaclock/scripts/paramether.py",
-            "peaclock/scripts/custom_logger.py",
-            "peaclock/scripts/log_handler_handle.py",
-            "peaclock/scripts/peaclockfunks.py",
-            "peaclock/scripts/count_cpgs.smk"],
-      package_data={"peaclock":["data/*",
+      scripts=["apollo/scripts/Snakefile",
+            "apollo/scripts/paramether.py",
+            "apollo/scripts/custom_logger.py",
+            "apollo/scripts/log_handler_handle.py",
+            "apollo/scripts/apollofunks.py",
+            "apollo/scripts/count_cpgs.smk"],
+      package_data={"apollo":["data/*",
                   "data/phalacrocorax/*",
                   "data/mus/*",
                   "data/apodemus/*"]},
@@ -24,12 +24,12 @@ setup(name='peaclock',
             "parasail"
         ],
       description='Predicted Epigenetic Age Clock',
-      url='github.com/cov-lineages/peaclock',
+      url='github.com/cov-lineages/apollo',
       author='Aine OToole & Tom Little',
       author_email='aine.otoole@ed.ac.uk',
       entry_points="""
       [console_scripts]
-      {program} = peaclock.command:main
+      {program} = apollo.command:main
       """.format(program = _program),
       include_package_data=True,
       keywords=[],
