@@ -119,6 +119,39 @@ See the help menu of peaclock for full command line options, all are configurabl
 
 ### Usage
 
+If you have a `config.yaml` file in the same directory that you’re in, all you need to write is:
+```
+peaclock
+```
+and it’ll detect the config file and run the software with all the settings given in the config file.
+
+If the config file isn’t in the same directory as you are (or is called soemthing different) you can say:
+```
+peaclock -c path/to/config.yaml
+```
+
+if you don’t have a config file and just want to run the tool on the command line you can input:
+
+```
+peaclock --read-path path/to/fastq/reads \
+         --demultiplex \
+         --species mus \
+         -t 3 \
+         --path-to-guppy path/to/guppy_barcoder
+```
+
+To run demultiplexing like above, you have either have guppy installed in your path or give peaclock the path to the binary file you download from the ont community (guppy can’t be installed with the conda command because of ont rules).
+
+If your reads are already demultiplexed (say in MinKNOW) you can input:
+
+```
+peaclock --read-path path/to/demuxed/reads \
+          --species mus \
+          -t 3
+```
+
+Full usage:
+
 ```
 usage: peaclock -i <path/to/reads> [options]
        peaclock -c <config.yaml>
