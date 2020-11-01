@@ -1,5 +1,5 @@
 # apollo
-Age Prediction Of Little's Little Organisms
+
 
 ## Quick links
 
@@ -21,7 +21,7 @@ Age Prediction Of Little's Little Organisms
                        / __ \|  |_> >  <_> )  |_|  |_(  <_> ) 
                       (____  /   __/ \____/|____/____/\____/ 
                            \/|__|                            
-                **** Age Prediction Of Little's Little Organisms ****
+                
                 
                                         0.1
                         ****************************************
