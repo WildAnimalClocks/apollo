@@ -13,5 +13,5 @@ dependencies:
   - snakemake-minimal
   - pip:
     - msgpack==0.6.2
-    - parasail
+    - parasail==1.2
     # - matplotlib==3.1.1
