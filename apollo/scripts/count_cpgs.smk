@@ -12,7 +12,7 @@ rule all:
 rule gather_demuxed_reads:
     input:
     params:
-        barcode_path = os.path.join(config["outdir"],"demultiplexed_reads","{barcode}"),
+        barcode_path = os.path.join(config["read_path"],"{barcode}"),
         barcode = "{barcode}"
     output:
         reads = os.path.join(config["outdir"],"gathered_reads","{barcode}.fastq")
