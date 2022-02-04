@@ -33,7 +33,7 @@ def get_defaults():
         "barcodes":"native",
         "barcodes_csv":"",
         "configfile":False,
-        "allowed_species":["apodemus","mus","phalacrocorax"],
+        "allowed_species":["apodemus","mus","desmodus","phalacrocorax"],
         "force":True,
         "threads":1
         }
@@ -190,7 +190,9 @@ def get_package_data(thisdir,species_arg, config):
         config["genes"] = genes
         config["primer_sequences"] = primer_sequences
     else:
-        sys.stderr.write(cyan(f'Error: {species} specified not configured in apollo\nPlease select an alternative species\n'))
+        sys.stderr.write(cyan(f'Error: {species} specified not configured in apollo\nPlease select an alternative species. Allowed species are:\n'))
+        for i in config["allowed_species"]:
+            sys.stderr.write(f"- {i}\n")
         sys.exit(-1)
 
 

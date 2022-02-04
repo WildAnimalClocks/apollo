@@ -17,6 +17,7 @@ setup(name='apollo',
       package_data={"apollo":["data/*",
                   "data/phalacrocorax/*",
                   "data/mus/*",
+                  "data/desmodus/*",
                   "data/apodemus/*"]},
       install_requires=[
             "biopython>=1.70",
