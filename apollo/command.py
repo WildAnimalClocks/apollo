@@ -49,7 +49,7 @@ def main(sysargs = sys.argv[1:]):
     demux_group.add_argument('--path-to-guppy',action="store",help="Path to guppy_barcoder executable",dest="path_to_guppy")
 
     run_group = parser.add_argument_group('run options')
-    run_group.add_argument('-s',"--species", action="store",help="Indicate which species is being sequenced. Options: mus, apodemus", dest="species")
+    run_group.add_argument('-s',"--species", action="store",help="Indicate which species is being sequenced. Options: mus, apodemus, desmodus", dest="species")
     run_group.add_argument("-r","--report",action="store_true",help="Generate markdown report of estimated age")
     
     misc_group = parser.add_argument_group('misc options')
