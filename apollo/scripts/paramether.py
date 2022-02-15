@@ -34,6 +34,7 @@ def get_best_reference(query, ref_dict, matrix):
         
         new_reference_alignment = align_read(query, ref, ref_dict[ref], matrix)
         if new_reference_alignment["coverage"] > 0.7:
+            
             if best_reference_alignment["identity"] < new_reference_alignment["identity"]: 
                 best_reference_alignment = new_reference_alignment
             else:
@@ -74,7 +75,7 @@ def process_file(reads,references,cpg_dict,sample,cpg_counter,nuc_matrix):
 
         stats = get_best_reference(str(record.seq), references, nuc_matrix)
         best_ref,direction = stats["reference"].split("_")
-
+        
         background_error_rate = get_background_error_rate(stats)
 
         alignment_covers = int(stats["aln_len"]) / int(stats["len"]) # doesn't account for gaps so can be > 1
@@ -87,20 +88,17 @@ def process_file(reads,references,cpg_dict,sample,cpg_counter,nuc_matrix):
             else:
                 read_seq = str(record.seq.reverse_complement())
             ref_seq = references[best_ref + "_forward"]
-            
+
             alignment = align_read(read_seq, best_ref, ref_seq, nuc_matrix)
-            
             for site in cpg_dict[best_ref]:
-
                 read_variant = get_site(site[1],alignment)
+                
                 cpg_counter[site[0]][read_variant]+=1
-
 
             counts[best_ref]+=1
 
         else:
             counts["None"]+=1
-
 
     return counts, cpg_counter
 
@@ -133,7 +131,7 @@ def get_site(cpg_index, stats):
 
 def load_cpg_dict(cpg_csv):
     cpg_dict= collections.defaultdict(list)
-    with open(str(cpg_csv),"r") as f:
+    with open(cpg_csv,"r") as f:
         cpg_file = csv.DictReader(f)
         for row in cpg_file:
             position = int(row["position"]) - 1
@@ -152,8 +150,9 @@ def load_reference_dict(ref_file):
 
     references = {}
     for record in SeqIO.parse(ref_file, "fasta"):
-         references[record.id + "_forward"] = str(record.seq)
-         references[record.id + "_reverse"] = str(record.seq.reverse_complement())
+        lower_id = str(record.id).lower()
+        references[lower_id+ "_forward"] = str(record.seq)
+        references[lower_id + "_reverse"] = str(record.seq.reverse_complement())
     return references
 
 if __name__ == '__main__':

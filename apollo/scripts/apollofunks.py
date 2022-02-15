@@ -98,7 +98,7 @@ def make_timestamped_outdir(cwd,outdir,config):
         output_prefix = '_'.join(split_prefix[:-1])
     config["output_prefix"] = output_prefix
     species = config["species"]
-    timestamp = str(datetime.now().isoformat(timespec='milliseconds')).replace(":","").replace(".","").replace("T","-")
+    timestamp = str(datetime.now().isoformat(timespec='seconds')).replace(":","").replace(".","").replace("T","-")
     outdir = os.path.join(cwd, f"{output_prefix}_{species}_{timestamp}")
     rel_outdir = os.path.join(".",timestamp)
 
@@ -198,10 +198,12 @@ def get_package_data(thisdir,species_arg, config):
 
 
 def look_for_guppy_barcoder(demultiplex_arg,path_to_guppy_arg,cwd,config):
+
     add_arg_to_config("demultiplex", demultiplex_arg, config)
     add_arg_to_config("path_to_guppy", path_to_guppy_arg, config)
     
     if config["demultiplex"]:
+
         if config["path_to_guppy"]:
             expanded_path = os.path.expanduser(config["path_to_guppy"])
             if config["path_to_guppy"].endswith("guppy_barcoder"):
@@ -279,10 +281,10 @@ def look_for_barcodes_csv(barcodes_csv_arg,cwd,config):
                 sys.stderr.write(f"Error: Barcode file missing header field `barcode`\n")
                 sys.exit(-1)
             for row in reader: 
-                if row["barcode"].startswith("NB") or row["barcode"].startswith("BC"):
+                if row["barcode"].startswith("NB") or row["barcode"].startswith("BC") or row["barcode"].startswith("barcode"):
                     barcodes.append(row["barcode"])
                 else:
-                    sys.stderr.write(f"Error: Please provide barcodes in the format `NB01` or `BC01`\n")
+                    sys.stderr.write(f"Error: Please provide barcodes in the format `NB01`, `BC01` or `barcode01`\n")
                     sys.exit(-1)
                     
             print(f"{len(barcodes)} barcodes read in from file")

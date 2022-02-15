@@ -83,14 +83,16 @@ def main(sysargs = sys.argv[1:]):
     """
     Get outdir, tempdir and the data
     """
+    # get data for a particular species, and get species
+    qcfunk.get_package_data(thisdir, args.species, config)
+    
     # default output dir
     qcfunk.get_outdir(args.outdir,args.output_prefix,cwd,config)
 
     # specifying temp directory, outdir if no_temp (tempdir becomes working dir)
     tempdir = qcfunk.get_temp_dir(args.tempdir, args.no_temp,cwd,config)
 
-    # get data for a particular species, and get species
-    qcfunk.get_package_data(thisdir, args.species, config)
+    
 
     config["cpg_header"] = qcfunk.make_cpg_header(config["cpg_sites"])
 
