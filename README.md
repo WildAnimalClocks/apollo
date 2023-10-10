@@ -1,5 +1,6 @@
 # apollo
 
+<a href="https://zenodo.org/badge/latestdoi/284751119"><img src="https://zenodo.org/badge/284751119.svg" alt="DOI"></a>
 
 ## Quick links
 
